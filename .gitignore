@@ -1,5 +1,6 @@
 # My stuff
-./secrets.sh
+secrets.sh
+vscode/*
 
 
 # Borrowed from https://github.com/github/gitignore
