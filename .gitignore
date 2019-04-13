@@ -1,6 +1,6 @@
 # My stuff
-secrets.sh
 vscode/*
+**/out
 
 
 # Borrowed from https://github.com/github/gitignore
