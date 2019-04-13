@@ -1,4 +1,6 @@
 import os
+import sys
+import argparse
 import json
 import urllib.request as req
 import urllib.error as urlerr
@@ -8,11 +10,22 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 import util
 
-# SPOTIFY_USERNAME = 'spotify'
-SPOTIFY_USERNAME = 'lyoaqbt6veuxjxk5jwappooa3'
-OUT_DIR = './out/data/'
-IMAGE_LIST_FILENAME = './out/data/images.lst'
-DOWNLOAD_IMAGES = True
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description='A utility for scraping the Spotify API for album artwork!')
+
+    parser.add_argument('--list-file', default='./out/data/images.lst', 
+        help='The path to the image list file. If this file exists and the overwrite flag '
+             'is not specified, then the cached listing will be used. Otherwise, a new file '
+             'is created and saved to')
+    parser.add_argument('--output-dir', default='./out/data',
+        help='The directory to output the downloaded images to')
+    parser.add_argument('--overwrite', action='store_true',
+        help='Flag that causes image files to be redownloaded, and the image list file to be '
+             'regenerated if it already exists')
+    parser.add_argument('--username', default='spotify',
+        help='The username of the user we want to pull playlists from')
+
+    return parser.parse_args(argv)
 
 
 def spotipy_iter(sp, response):
@@ -46,8 +59,8 @@ def scrape_discog(sp, artist_id):
 
     return discog_dict
 
-def scrape_playlist(sp, playlist_id):
-    playlist = sp.user_playlist(SPOTIFY_USERNAME, playlist_id=playlist_id)
+def scrape_playlist(sp, playlist_id, username):
+    playlist = sp.user_playlist(username, playlist_id=playlist_id)
     
     playlist_dict = {}
     for track in spotipy_iter(sp, playlist['tracks']):
@@ -57,11 +70,11 @@ def scrape_playlist(sp, playlist_id):
     return playlist_dict
 
 def scrape_album_artwork(sp, username):
-    user_playlists = sp.user_playlists(SPOTIFY_USERNAME)
+    user_playlists = sp.user_playlists(username)
     album_dict = {}
 
     for playlist in spotipy_iter(sp, user_playlists):
-        album_dict.update(scrape_playlist(sp, playlist['id']))
+        album_dict.update(scrape_playlist(sp, playlist['id'], username))
     
     return album_dict
 
@@ -82,10 +95,10 @@ def download_image(out_dir, album_id, album_image, overwrite=False):
     req.urlretrieve(album_image, filepath)
 
 def download_images(album_dict, output_directory, overwrite=False):
-    util.makedirs(OUT_DIR)
+    util.makedirs(output_directory)
     for album_id, album_info in album_dict.items():
         try:
-            download_image(OUT_DIR, album_id, album_info['url'], overwrite=overwrite)
+            download_image(output_directory, album_id, album_info['url'], overwrite=overwrite)
         except (urlerr.HTTPError, urlerr.ContentTooShortError):
             print('Could not retrieve %s by %s'%(album_info['name'], album_info['artist']))
 
@@ -110,4 +123,5 @@ def download_image_data(username, data_directory, list_file, overwrite=False):
 
 
 if __name__ == '__main__':
-    download_image_data(SPOTIFY_USERNAME, OUT_DIR, IMAGE_LIST_FILENAME)
+    args = parse_args(sys.argv[1:])
+    download_image_data(args.username, args.output_dir, args.list_file, overwrite=args.overwrite)
