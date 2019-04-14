@@ -10,6 +10,16 @@
             "request": "launch",
             "program": "${workspaceFolder}/data.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Data Collection Small",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/data.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--username", "lyoaqbt6veuxjxk5jwappooa3"
+            ]
         }
         // {
         //     "name": "Python: Remote Attach",
